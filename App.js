@@ -39,6 +39,42 @@ function App() {
         }
     };
 
+
+    // Funzione per comunicare con il fake server
+    const getJson = async (route) => {
+        try {
+            const response = await fetch(`http://127.0.0.1:8080/${route}`, {
+                // method: "GET",
+                // headers: {
+                //     "Content-Type": "application/json",
+                // },
+                //body: JSON.stringify({ query }),
+            });
+            
+            const data = await response.json();
+            console.log("data: ", data);
+            
+            const msg = data.Msg;
+            const esito = data.Esito;
+            var numRows = "-1";
+            if((route == "aeroporti")||(route == "elencovoli")||(route == "compagnie"))
+              route = "readquery";
+            if (route == "readquery" && esito == "000") {
+                numRows = data.queryResult.numRows;
+                setColumns(data.queryResult.columns || []);
+                setRows(data.queryResult.rows || []);
+            } 
+            
+            setResultMsg(msg || "None");
+            setResultNRows(numRows || "None");
+        } catch (error) {
+            setResultMsg("Errore nella richiesta: " + error.message);
+        }
+    };
+
+
+
+
     const voli =  `SELECT lap.citta as Partenza, 
                           ap.partenza as Aeroporto_Partenza,
                           laa.citta as Arrivo, 
@@ -63,9 +99,9 @@ function App() {
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.header}>Mobile Flask Cielo DB</Text>
             <View style={styles.buttonContainer}>
-                <Button style={styles.button} title="Elenco Voli" onPress={() => handleQuery("readquery", voli)} color="red" />
-                <Button title="Aeroporti" onPress={() => handleQuery("readquery", aeroporti)} color="blue" />
-                <Button title="Compagnie Aeree" onPress={() => handleQuery("readquery", compagnie)} color="blue" />
+                <Button style={styles.button} title="Elenco Voli" onPress={() => getJson("elencovoli")} color="red" />
+                <Button title="Aeroporti" onPress={() => getJson("aeroporti")} color="blue" />
+                <Button title="Compagnie Aeree" onPress={() => getJson("compagnie", compagnie)} color="blue" />
             </View>
 
             <View style={styles.inputContainer}>
@@ -121,32 +157,73 @@ function App() {
     );
 }
 
+
+
 const styles = StyleSheet.create({
     container: {
         padding: 20,
-        marginBottom: 20,
+        backgroundColor: "#F8F9FA",
     },
     header: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        textAlign: 'center',
+        fontSize: 28,
+        fontWeight: "bold",
+        textAlign: "center",
         marginBottom: 20,
+        color: "#333",
     },
     buttonContainer: {
-        
+        flexDirection: "row",
+        justifyContent: "space-around",
         marginBottom: 20,
     },
     button: {
-      fontWeight: 'bold',
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderRadius: 8,
+        marginBottom: 50,
     },
-    inputContainer: {
-        marginBottom: 20,
+    buttonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "bold",
+        textAlign: "center",
+    },
+    tableContainer: {
+        marginTop: 20,
+    },
+    tableRowHeader: {
+        flexDirection: "row",
+        backgroundColor: "#ddd",
+        padding: 10,
+    },
+    tableRow: {
+        flexDirection: "row",
+        padding: 10,
+    },
+    evenRow: {
+        backgroundColor: "#f9f9f9",
+    },
+    oddRow: {
+        backgroundColor: "#ffffff",
+    },
+    tableHeader: {
+        fontWeight: "bold",
+        padding: 10,
+        flex: 1,
+    },
+    tableCell: {
+        padding: 10,
+        flex: 1,
     },
     input: {
         height: 40,
         borderColor: '#ccc',
         borderWidth: 1,
         marginVertical: 10,
+        paddingHorizontal: 8,
+    },
+    inputContainer: {
+        marginBottom: 10,
         paddingHorizontal: 8,
     },
     resultHeader: {
@@ -159,24 +236,5 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 5,
     },
-    table: {
-        marginTop: 10,
-    },
-    tableRow: {
-        flexDirection: 'row',
-        borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
-    },
-    tableHeader: {
-        flex: 1,
-        padding: 10,
-        backgroundColor: '#ddd',
-        fontWeight: 'bold',
-    },
-    tableCell: {
-        flex: 1,
-        padding: 10,
-    },
 });
-
 export default App;
